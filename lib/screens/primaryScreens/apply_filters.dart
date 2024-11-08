@@ -9,7 +9,6 @@ import 'package:music_manager/shared/theme_constants.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 
-// ignore: must_be_immutable
 class ApplyFilters extends StatefulWidget {
   List<FilterChipData> yearChips;
   List<FilterChipData> singerChips;
@@ -63,6 +62,62 @@ class _ApplyFiltersState extends State<ApplyFilters> {
   double yearContainerWidth = 90;
   bool yearContainerToggle = false;
   List<String> selectedYears = [];
+  // From and To year text box field variables
+  final TextEditingController fromYearController = TextEditingController();
+  final TextEditingController toYearController = TextEditingController();
+
+  @override
+  void dispose() {
+    fromYearController.dispose();
+    toYearController.dispose();
+    super.dispose();
+  }
+
+  void updateYearsRange() {
+    final fromYear = int.tryParse(fromYearController.text);
+    final toYear = int.tryParse(toYearController.text);
+
+    if (fromYear != null &&
+        toYear != null &&
+        fromYear <= toYear &&
+        fromYear >= 1900 &&
+        toYear >= 1900 &&
+        fromYear <= 2150 &&
+        toYear <= 2150) {
+      setState(() {
+        selectedYears.clear();
+        for (int year = fromYear; year <= toYear; year++) {
+          selectedYears.add(year.toString());
+        }
+        debugPrint("Selected Years = $selectedYears");
+      });
+
+      widget.yearChips = widget.yearChips.map((chip) {
+        return chip.copy(isSelected: false);
+      }).toList();
+
+      ScaffoldMessenger.of(context).showSnackBar(createCustomSnackBar(
+          'Year filter applied, years from ${fromYear} to ${toYear}'));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(createCustomSnackBar(
+          'Invalid year range!\nEnter year range between 1900 - 2150.'));
+    }
+  }
+
+  void resetYearsSelection() {
+    setState(() {
+      selectedYears.clear();
+      fromYearController.clear();
+      toYearController.clear();
+    });
+
+    widget.yearChips = widget.yearChips.map((chip) {
+      return chip.copy(isSelected: false);
+    }).toList();
+
+    ScaffoldMessenger.of(context)
+        .showSnackBar(createCustomSnackBar('Year filter resetted'));
+  }
 
   // Singers Filter chip associated variables
   double singerContainerHeight = 70;
@@ -94,6 +149,141 @@ class _ApplyFiltersState extends State<ApplyFilters> {
   bool resourceTypeContainerToggle = false;
   List<String> selectedResourceType = [];
 
+  // Clear Chips Functions
+  // Primary Search Labels, Clear chips
+  void resetPrimarySearchLabelsChips() {
+    setState(() {
+      selectedPrimarySearchLabels.clear();
+      // Deselect all primary search label chips
+      widget.primarySearchLabelsChips = widget.primarySearchLabelsChips
+          .map((chip) => chip.copy(isSelected: false))
+          .toList();
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      createCustomSnackBar('Primary Search Labels chips cleared'),
+    );
+  }
+
+  // Secondary Search Labels, Clear chips
+  void resetSecondarySearchLabelsChips() {
+    setState(() {
+      selectedSecondarySearchLabels.clear();
+      // Deselect all primary search label chips
+      widget.secondarySearchLabelsChips = widget.secondarySearchLabelsChips
+          .map((chip) => chip.copy(isSelected: false))
+          .toList();
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      createCustomSnackBar('Secondary Search Labels chips cleared'),
+    );
+  }
+
+  // Likebility Index, Clear chips
+  void resetLikebilityIndexChips() {
+    setState(() {
+      selectedLikebilityIndexes.clear();
+      // Deselect all primary search label chips
+      widget.likebilityIndexChips = widget.likebilityIndexChips
+          .map((chip) => chip.copy(isSelected: false))
+          .toList();
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      createCustomSnackBar('Likebility Index chips cleared'),
+    );
+  }
+
+  // Year, Clear chips
+  void resetYearChips() {
+    setState(() {
+      selectedYears.clear();
+      // Deselect all primary search label chips
+      widget.yearChips =
+          widget.yearChips.map((chip) => chip.copy(isSelected: false)).toList();
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      createCustomSnackBar('Year chips cleared'),
+    );
+  }
+
+  // Singers, Clear chips
+  void resetSingersChips() {
+    setState(() {
+      selectedSingers.clear();
+      // Deselect all primary search label chips
+      widget.singerChips = widget.singerChips
+          .map((chip) => chip.copy(isSelected: false))
+          .toList();
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      createCustomSnackBar('Singers chips cleared'),
+    );
+  }
+
+  // Music Direcotrs, Clear chips
+  void resetMusicDirectorsChips() {
+    setState(() {
+      selectedMusicDirectors.clear();
+      // Deselect all primary search label chips
+      widget.musicDirectorChips = widget.musicDirectorChips
+          .map((chip) => chip.copy(isSelected: false))
+          .toList();
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      createCustomSnackBar('Music Directors chips cleared'),
+    );
+  }
+
+  // Lyricist, Clear chips
+  void resetLyricistChips() {
+    setState(() {
+      selectedLyricist.clear();
+      // Deselect all primary search label chips
+      widget.lyricistChips = widget.lyricistChips
+          .map((chip) => chip.copy(isSelected: false))
+          .toList();
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      createCustomSnackBar('Lyricist chips cleared'),
+    );
+  }
+
+  // Artists, Clear chips
+  void resetArtistsChips() {
+    setState(() {
+      selectedArtists.clear();
+      // Deselect all primary search label chips
+      widget.artistsChips = widget.artistsChips
+          .map((chip) => chip.copy(isSelected: false))
+          .toList();
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      createCustomSnackBar('Artists chips cleared'),
+    );
+  }
+
+  // Resource Type, Clear chips
+  void resetResourceTypeChips() {
+    setState(() {
+      selectedResourceType.clear();
+      // Deselect all primary search label chips
+      widget.resourceTypeChips = widget.resourceTypeChips
+          .map((chip) => chip.copy(isSelected: false))
+          .toList();
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      createCustomSnackBar('Resource Type chips cleared'),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     callbackPrimarySearchLabelsUpdatedFilterChipList(
@@ -120,7 +310,7 @@ class _ApplyFiltersState extends State<ApplyFilters> {
       });
     }
 
-    callbackYearUpdatedFilterChipList(
+    void callbackYearUpdatedFilterChipList(
         List<FilterChipData> updatedList, List<String> selectedItems) {
       setState(() {
         widget.yearChips = updatedList;
@@ -178,32 +368,42 @@ class _ApplyFiltersState extends State<ApplyFilters> {
             context.read<GradientBackgroundTheme>().bgThemeType),
         alignment: Alignment.topLeft,
         child: SingleChildScrollView(
-          scrollDirection: Axis.vertical,
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Primary Search Labels Filter Components
               // Primary Search Labels Text-Tappable
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    primarySearchLabelsContainerToggle =
-                        !primarySearchLabelsContainerToggle;
-                    primarySearchLabelsContainerHeight =
-                        (primarySearchLabelsContainerToggle == false)
-                            ? 70
-                            : 250;
-                    primarySearchLabelsContainerWidth =
-                        (primarySearchLabelsContainerToggle == false)
-                            ? 90
-                            : MediaQuery.of(context).size.width * 0.9;
-                  });
-                },
-                child: Text(
-                  "Primary Search Labels",
-                  style: CustomTextStyles.headingsTextStyle,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        primarySearchLabelsContainerToggle =
+                            !primarySearchLabelsContainerToggle;
+                        primarySearchLabelsContainerHeight =
+                            (primarySearchLabelsContainerToggle == false)
+                                ? 70
+                                : 250;
+                        primarySearchLabelsContainerWidth =
+                            (primarySearchLabelsContainerToggle == false)
+                                ? 90
+                                : MediaQuery.of(context).size.width * 0.9;
+                      });
+                    },
+                    child: Text(
+                      "Primary Search Labels",
+                      style: CustomTextStyles.headingsTextStyle,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.clear_all_rounded, color: Colors.white),
+                    tooltip: 'Clear Primary Search Labels',
+                    onPressed: selectedPrimarySearchLabels.isNotEmpty
+                        ? resetPrimarySearchLabelsChips
+                        : null, // Disable if nothing is selected
+                  ),
+                ],
               ),
               // Primary Search Labels-Chips Animated Container
               AnimatedContainer(
@@ -229,25 +429,37 @@ class _ApplyFiltersState extends State<ApplyFilters> {
 
               // Secondary Search Labels Filter Components
               // Secondary Search Labels Text-Tappable
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    secondarySearchLabelsContainerToggle =
-                        !secondarySearchLabelsContainerToggle;
-                    secondarySearchLabelsContainerHeight =
-                        (secondarySearchLabelsContainerToggle == false)
-                            ? 70
-                            : 250;
-                    secondarySearchLabelsContainerWidth =
-                        (secondarySearchLabelsContainerToggle == false)
-                            ? 90
-                            : MediaQuery.of(context).size.width * 0.9;
-                  });
-                },
-                child: Text(
-                  "Secondary Search Labels",
-                  style: CustomTextStyles.headingsTextStyle,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        secondarySearchLabelsContainerToggle =
+                            !secondarySearchLabelsContainerToggle;
+                        secondarySearchLabelsContainerHeight =
+                            (secondarySearchLabelsContainerToggle == false)
+                                ? 70
+                                : 250;
+                        secondarySearchLabelsContainerWidth =
+                            (secondarySearchLabelsContainerToggle == false)
+                                ? 90
+                                : MediaQuery.of(context).size.width * 0.9;
+                      });
+                    },
+                    child: Text(
+                      "Secondary Search Labels",
+                      style: CustomTextStyles.headingsTextStyle,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.clear_all_rounded, color: Colors.white),
+                    tooltip: 'Clear Secondary Search Labels',
+                    onPressed: selectedSecondarySearchLabels.isNotEmpty
+                        ? resetSecondarySearchLabelsChips
+                        : null, // Disable if nothing is selected
+                  ),
+                ],
               ),
               // Secondary Search Labels-Chips Animated Container
               AnimatedContainer(
@@ -273,23 +485,35 @@ class _ApplyFiltersState extends State<ApplyFilters> {
 
               // Likebility Index Filter Components
               // Likebility Index Text-Tappable
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    likebilityIndexContainerToggle =
-                        !likebilityIndexContainerToggle;
-                    likebilityIndexContainerHeight =
-                        (likebilityIndexContainerToggle == false) ? 70 : 250;
-                    likebilityIndexContainerWidth =
-                        (likebilityIndexContainerToggle == false)
-                            ? 90
-                            : MediaQuery.of(context).size.width * 0.9;
-                  });
-                },
-                child: Text(
-                  "Likebility Index",
-                  style: CustomTextStyles.headingsTextStyle,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        likebilityIndexContainerToggle =
+                            !likebilityIndexContainerToggle;
+                        likebilityIndexContainerHeight =
+                            (likebilityIndexContainerToggle == false) ? 70 : 70;
+                        likebilityIndexContainerWidth =
+                            (likebilityIndexContainerToggle == false)
+                                ? 90
+                                : MediaQuery.of(context).size.width * 0.9;
+                      });
+                    },
+                    child: Text(
+                      "Likebility Index",
+                      style: CustomTextStyles.headingsTextStyle,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.clear_all_rounded, color: Colors.white),
+                    tooltip: 'Clear Likebility Index',
+                    onPressed: selectedLikebilityIndexes.isNotEmpty
+                        ? resetLikebilityIndexChips
+                        : null, // Disable if nothing is selected
+                  ),
+                ],
               ),
               // Likebility Index-Chips Animated Container
               AnimatedContainer(
@@ -314,24 +538,111 @@ class _ApplyFiltersState extends State<ApplyFilters> {
               ),
 
               // Year Filter Components
-              // Year Text-Tappable
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    yearContainerToggle = !yearContainerToggle;
-                    yearContainerHeight =
-                        (yearContainerToggle == false) ? 70 : 170;
-                    yearContainerWidth = (yearContainerToggle == false)
-                        ? 90
-                        : MediaQuery.of(context).size.width * 0.9;
-                  });
-                },
-                child: Text(
-                  "Year",
-                  style: CustomTextStyles.headingsTextStyle,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        yearContainerToggle = !yearContainerToggle;
+                        yearContainerHeight = yearContainerToggle ? 170 : 70;
+                        yearContainerWidth = yearContainerToggle
+                            ? MediaQuery.of(context).size.width * 0.9
+                            : 90;
+                      });
+                    },
+                    child: Text(
+                      "Year",
+                      style: CustomTextStyles.headingsTextStyle,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.clear_all_rounded, color: Colors.white),
+                    tooltip: 'Clear Year',
+                    onPressed: selectedYears.isNotEmpty
+                        ? resetYearChips
+                        : null, // Disable if nothing is selected
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: 5,
+              ),
+              // From Year and To Year Input Fields with Add and Reset Buttons
+              SizedBox(
+                height: 40,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: fromYearController,
+                        cursorColor: Colors.white,
+                        cursorHeight: 20,
+                        decoration: InputDecoration(
+                          labelText: 'From Year',
+                          labelStyle: GoogleFonts.jost(color: Colors.white),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: Color.fromARGB(131, 134, 134, 134),
+                              )),
+                          enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: Color.fromARGB(82, 106, 106, 106),
+                              )),
+                          focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: Color.fromARGB(225, 255, 255, 255),
+                              )),
+                        ),
+                        keyboardType: TextInputType.number,
+                        style: GoogleFonts.jost(color: Colors.white),
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: TextField(
+                        controller: toYearController,
+                        cursorColor: Colors.white,
+                        cursorHeight: 20,
+                        decoration: InputDecoration(
+                          labelText: 'To Year',
+                          labelStyle: GoogleFonts.jost(color: Colors.white),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: Color.fromARGB(131, 134, 134, 134),
+                              )),
+                          enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: Color.fromARGB(82, 106, 106, 106),
+                              )),
+                          focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: Color.fromARGB(225, 255, 255, 255),
+                              )),
+                        ),
+                        keyboardType: TextInputType.number,
+                        style: GoogleFonts.jost(color: Colors.white),
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.playlist_add_check_rounded,
+                          color: Colors.white),
+                      onPressed: updateYearsRange,
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.clear_rounded, color: Colors.white),
+                      onPressed: resetYearsSelection,
+                    ),
+                  ],
                 ),
               ),
-              // Year-Chips Animated Container
+              SizedBox(height: 10),
               AnimatedContainer(
                 duration: Duration(milliseconds: 800),
                 alignment: Alignment.topLeft,
@@ -342,7 +653,6 @@ class _ApplyFiltersState extends State<ApplyFilters> {
                 height: yearContainerHeight,
                 width: yearContainerWidth,
                 child: SingleChildScrollView(
-                  scrollDirection: Axis.vertical,
                   child: buildChips(widget.yearChips, selectedYears,
                       callbackYearUpdatedFilterChipList),
                 ),
@@ -353,21 +663,33 @@ class _ApplyFiltersState extends State<ApplyFilters> {
 
               // Singers Filter Components
               // Singers Text-Tappable
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    singerContainerToggle = !singerContainerToggle;
-                    singerContainerHeight =
-                        (singerContainerToggle == false) ? 70 : 250;
-                    singerContainerWidth = (singerContainerToggle == false)
-                        ? 90
-                        : MediaQuery.of(context).size.width * 0.9;
-                  });
-                },
-                child: Text(
-                  "Singers",
-                  style: CustomTextStyles.headingsTextStyle,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        singerContainerToggle = !singerContainerToggle;
+                        singerContainerHeight =
+                            (singerContainerToggle == false) ? 70 : 250;
+                        singerContainerWidth = (singerContainerToggle == false)
+                            ? 90
+                            : MediaQuery.of(context).size.width * 0.9;
+                      });
+                    },
+                    child: Text(
+                      "Singers",
+                      style: CustomTextStyles.headingsTextStyle,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.clear_all_rounded, color: Colors.white),
+                    tooltip: 'Clear Singers',
+                    onPressed: selectedSingers.isNotEmpty
+                        ? resetSingersChips
+                        : null, // Disable if nothing is selected
+                  ),
+                ],
               ),
               // Singers-Chips Animated Container
               AnimatedContainer(
@@ -391,23 +713,35 @@ class _ApplyFiltersState extends State<ApplyFilters> {
 
               // Music Director Filter Components
               // Music Director Text-Tappable
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    musicdirectorContainerToggle =
-                        !musicdirectorContainerToggle;
-                    musicdirectorContainerHeight =
-                        (musicdirectorContainerToggle == false) ? 70 : 250;
-                    musicdirectorContainerWidth =
-                        (musicdirectorContainerToggle == false)
-                            ? 90
-                            : MediaQuery.of(context).size.width * 0.9;
-                  });
-                },
-                child: Text(
-                  "Music Directors",
-                  style: CustomTextStyles.headingsTextStyle,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        musicdirectorContainerToggle =
+                            !musicdirectorContainerToggle;
+                        musicdirectorContainerHeight =
+                            (musicdirectorContainerToggle == false) ? 70 : 250;
+                        musicdirectorContainerWidth =
+                            (musicdirectorContainerToggle == false)
+                                ? 90
+                                : MediaQuery.of(context).size.width * 0.9;
+                      });
+                    },
+                    child: Text(
+                      "Music Directors",
+                      style: CustomTextStyles.headingsTextStyle,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.clear_all_rounded, color: Colors.white),
+                    tooltip: 'Clear Music Directors',
+                    onPressed: selectedMusicDirectors.isNotEmpty
+                        ? resetMusicDirectorsChips
+                        : null, // Disable if nothing is selected
+                  ),
+                ],
               ),
               // Music Director-Chips Animated Container
               AnimatedContainer(
@@ -433,21 +767,34 @@ class _ApplyFiltersState extends State<ApplyFilters> {
 
               // Lyricist Filter Components
               // Lyricist Text-Tappable
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    lyricistContainerToggle = !lyricistContainerToggle;
-                    lyricistContainerHeight =
-                        (lyricistContainerToggle == false) ? 70 : 250;
-                    lyricistContainerWidth = (lyricistContainerToggle == false)
-                        ? 90
-                        : MediaQuery.of(context).size.width * 0.9;
-                  });
-                },
-                child: Text(
-                  "Lyricist",
-                  style: CustomTextStyles.headingsTextStyle,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        lyricistContainerToggle = !lyricistContainerToggle;
+                        lyricistContainerHeight =
+                            (lyricistContainerToggle == false) ? 70 : 250;
+                        lyricistContainerWidth =
+                            (lyricistContainerToggle == false)
+                                ? 90
+                                : MediaQuery.of(context).size.width * 0.9;
+                      });
+                    },
+                    child: Text(
+                      "Lyricist",
+                      style: CustomTextStyles.headingsTextStyle,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.clear_all_rounded, color: Colors.white),
+                    tooltip: 'Clear Lyricist',
+                    onPressed: selectedLyricist.isNotEmpty
+                        ? resetLyricistChips
+                        : null, // Disable if nothing is selected
+                  ),
+                ],
               ),
               // Lyricist-Chips Animated Container
               AnimatedContainer(
@@ -471,21 +818,34 @@ class _ApplyFiltersState extends State<ApplyFilters> {
 
               // Artists Filter Components
               // Artists Text-Tappable
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    artistsContainerToggle = !artistsContainerToggle;
-                    artistsContainerHeight =
-                        (artistsContainerToggle == false) ? 70 : 250;
-                    artistsContainerWidth = (artistsContainerToggle == false)
-                        ? 90
-                        : MediaQuery.of(context).size.width * 0.9;
-                  });
-                },
-                child: Text(
-                  "Artists",
-                  style: CustomTextStyles.headingsTextStyle,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        artistsContainerToggle = !artistsContainerToggle;
+                        artistsContainerHeight =
+                            (artistsContainerToggle == false) ? 70 : 250;
+                        artistsContainerWidth =
+                            (artistsContainerToggle == false)
+                                ? 90
+                                : MediaQuery.of(context).size.width * 0.9;
+                      });
+                    },
+                    child: Text(
+                      "Artists",
+                      style: CustomTextStyles.headingsTextStyle,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.clear_all_rounded, color: Colors.white),
+                    tooltip: 'Clear Artists',
+                    onPressed: selectedArtists.isNotEmpty
+                        ? resetArtistsChips
+                        : null, // Disable if nothing is selected
+                  ),
+                ],
               ),
               // Artists-Chips Animated Container
               AnimatedContainer(
@@ -509,22 +869,35 @@ class _ApplyFiltersState extends State<ApplyFilters> {
 
               // Resource Type Filter Components
               // Resource Type Text-Tappable
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    resourceTypeContainerToggle = !resourceTypeContainerToggle;
-                    resourceTypeContainerHeight =
-                        (resourceTypeContainerToggle == false) ? 70 : 250;
-                    resourceTypeContainerWidth =
-                        (resourceTypeContainerToggle == false)
-                            ? 90
-                            : MediaQuery.of(context).size.width * 0.9;
-                  });
-                },
-                child: Text(
-                  "Resource Type",
-                  style: CustomTextStyles.headingsTextStyle,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        resourceTypeContainerToggle =
+                            !resourceTypeContainerToggle;
+                        resourceTypeContainerHeight =
+                            (resourceTypeContainerToggle == false) ? 70 : 70;
+                        resourceTypeContainerWidth =
+                            (resourceTypeContainerToggle == false)
+                                ? 90
+                                : MediaQuery.of(context).size.width * 0.9;
+                      });
+                    },
+                    child: Text(
+                      "Resource Type",
+                      style: CustomTextStyles.headingsTextStyle,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.clear_all_rounded, color: Colors.white),
+                    tooltip: 'Clear Resource Type',
+                    onPressed: selectedResourceType.isNotEmpty
+                        ? resetResourceTypeChips
+                        : null, // Disable if nothing is selected
+                  ),
+                ],
               ),
               // Resource Type-Chips Animated Container
               AnimatedContainer(
@@ -543,15 +916,11 @@ class _ApplyFiltersState extends State<ApplyFilters> {
                       selectedResourceType,
                       callbackResourceTypeUpdatedFilterChipList),
                 ),
-              ),
-              SizedBox(
-                height: 10,
-              ),
+              )
             ],
           ),
         ),
       ),
-      // Fire query on Local Database Songs DB
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
           Map<String, List<String>> selectedItemsMap = {};
@@ -571,7 +940,6 @@ class _ApplyFiltersState extends State<ApplyFilters> {
           selectedItemsMap[SongsDBFields.resourceType] = selectedResourceType;
           selectedItemsMap[SongsDBFields.likebilityIndex] =
               selectedLikebilityIndexes;
-
           List<SongData> filteredResultList =
               await SongsDatabase.instance.queryDatabase(
             selectedItemsMap: selectedItemsMap,
@@ -583,12 +951,11 @@ class _ApplyFiltersState extends State<ApplyFilters> {
         },
         backgroundColor: Color.fromARGB(255, 235, 235, 235),
         foregroundColor: Colors.black,
-        icon: Icon(
-          Icons.manage_search_rounded,
-          size: 27,
+        icon: Icon(Icons.manage_search_rounded, size: 27),
+        label: Text(
+          'Query',
+          style: GoogleFonts.jost(fontWeight: FontWeight.w500, fontSize: 15),
         ),
-        label: Text('Query',
-            style: GoogleFonts.jost(fontWeight: FontWeight.w500, fontSize: 15)),
       ),
     );
   }
@@ -599,13 +966,10 @@ class _ApplyFiltersState extends State<ApplyFilters> {
       alignment: Alignment.bottomCenter,
       duration: Duration(milliseconds: 850),
       reverseDuration: Duration(milliseconds: 500),
-      child: FilteredResultListView(
-        filteredResultList: list,
-      ),
+      child: FilteredResultListView(filteredResultList: list),
     ));
   }
 
-  // Build Chips inside Animated Container
   Widget buildChips(List<FilterChipData> filterChipList, List selectedItemsList,
       Function callbackUpdatedFilterChipList) {
     return Wrap(
@@ -616,53 +980,36 @@ class _ApplyFiltersState extends State<ApplyFilters> {
           padding: EdgeInsets.fromLTRB(7, 0, 7, 0),
           label: Text(filterChip.label),
           labelStyle: GoogleFonts.cabin(
-              color: (filterChip.isSelected == false)
-                  ? filterChip.unselectedTextColor
-                  : Colors.black,
+              color: filterChip.isSelected
+                  ? Colors.black
+                  : filterChip.unselectedTextColor,
               fontWeight: FontWeight.w400,
               fontSize: 13),
           shape: StadiumBorder(
               side: BorderSide(
-            // color: Colors.transparent,
             width: 0.3,
-            color: (filterChip.isSelected == false)
-                ? Colors.white
-                : Colors.transparent,
+            color: filterChip.isSelected ? Colors.transparent : Colors.white,
           )),
-          // chip background color
           backgroundColor: Color.fromARGB(204, 17, 17, 17),
           selectedColor: Colors.white,
-
           onSelected: (isSelected) {
-            return setState(() {
+            setState(() {
               filterChipList = filterChipList.map((otherChip) {
-                // debugPrint(
-                //     ">> Singers filtered chp: <${filterChip.label}:${filterChip.isSelected}>\n\t Singers other chp: <${otherChip.label}:${otherChip.isSelected}>");
                 if (filterChip == otherChip) {
-                  // NOTE: adding and removal into list is done through juggad, trace variable values to know more
-                  if (filterChip.isSelected == true) {
-                    //remove item from list
+                  if (filterChip.isSelected) {
                     selectedItemsList.remove(filterChip.label);
                   } else {
                     selectedItemsList.add(filterChip.label);
                   }
-
-                  debugPrint(">> SELECTED ITEMS LIST = $selectedItemsList");
                   return otherChip.copy(
                       isSelected: isSelected,
                       label: filterChip.label,
                       unselectedTextColor: filterChip.unselectedTextColor);
-                } else {
-                  return otherChip;
                 }
+                return otherChip;
               }).toList();
 
               callbackUpdatedFilterChipList(filterChipList, selectedItemsList);
-              // debugdebugPrint(">>> INSIDE set state -> Singers filter chip list : ");
-              // for (int i = 0; i < filterChipList.length; i++) {
-              //   debugPrint(
-              //       ">> <${filterChipList[i].label}:${filterChipList[i].isSelected}>\n");
-              // }
             });
           },
           selected: filterChip.isSelected,

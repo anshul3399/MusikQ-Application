@@ -12,6 +12,26 @@ class CustomTextStyles {
       fontSize: 14, color: Color.fromARGB(255, 0, 0, 0), letterSpacing: 1.5);
 }
 
+SnackBar createCustomSnackBar(String snackbarMessage) {
+  return SnackBar(
+    content: Text(
+      snackbarMessage,
+      style: GoogleFonts.jost(
+        color: Colors.white,
+        fontSize: 13,
+      ),
+      textAlign: TextAlign.left,
+    ),
+    backgroundColor: Color.fromARGB(255, 50, 50, 50),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(16), // Round the top corners
+      ),
+    ),
+    duration: Duration(seconds: 2),
+  );
+}
+
 class CustomBackgroundGradientStyles {
   // Gradient Background for application
   static BoxDecoration applicationBackground(int bgThemeType) {

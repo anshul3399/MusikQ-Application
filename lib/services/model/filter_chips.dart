@@ -73,14 +73,14 @@ class FilterChipData {
   });
 
   FilterChipData copy({
-    required String label,
-    required Color unselectedTextColor,
-    required bool isSelected,
+    String? label,
+    Color? unselectedTextColor,
+    bool? isSelected,
   }) =>
       FilterChipData(
-        label: label,
-        unselectedTextColor: unselectedTextColor,
-        isSelected: isSelected,
+        label: label ?? this.label,
+        unselectedTextColor: unselectedTextColor ?? this.unselectedTextColor,
+        isSelected: isSelected ?? this.isSelected,
       );
 
   @override
