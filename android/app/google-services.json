@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "684271005706",
+    "project_id": "musikq-application",
+    "storage_bucket": "musikq-application.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:684271005706:android:eeb1aedf41838d73092ff3",
+        "android_client_info": {
+          "package_name": "com.anshul3399.musikq"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "684271005706-373pa529i2qok3m78te89682np6shsd2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAfgiZY6a6ilbhaTHTw64MUHvhp7arE4Ng"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "684271005706-373pa529i2qok3m78te89682np6shsd2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
