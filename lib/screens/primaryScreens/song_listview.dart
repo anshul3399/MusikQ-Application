@@ -34,9 +34,32 @@ class _SongsListViewState extends State<SongsListView> {
 
   Future<void> _loadSongs() async {
     try {
+      // Get all songs from database
       allSongs = await SongsDatabase.instance.readAllSongs() as List<SongData>;
+
+      // Group songs by thumbnail URL
+      final Map<String, List<SongData>> groupedSongs = {};
+      for (var song in allSongs) {
+        final thumbnailURL = song.thumbnailURL ?? '';
+        if (!groupedSongs.containsKey(thumbnailURL)) {
+          groupedSongs[thumbnailURL] = [];
+        }
+        groupedSongs[thumbnailURL]!.add(song);
+      }
+
+      // Convert groups to list and shuffle them
+      final List<List<SongData>> groupsList = groupedSongs.values.toList();
+      groupsList.shuffle();
+
+      // Flatten the groups back into a single list
+      final List<SongData> shuffledSongs = [];
+      for (var group in groupsList) {
+        shuffledSongs.addAll(group);
+      }
+
       setState(() {
-        filteredSongs = allSongs;
+        allSongs = shuffledSongs;
+        filteredSongs = shuffledSongs;
         isLoading = false;
       });
     } catch (error) {
@@ -171,9 +194,10 @@ class _SongsListViewState extends State<SongsListView> {
                               icon: Icon(
                                 song.resourceURL!.contains('search?q=')
                                     ? Icons.search_rounded
-                                    : Icons.arrow_forward_ios_rounded,
+                                    //: Icons.arrow_forward_ios_rounded,
+                                    : Icons.music_note_outlined,
                                 color: Colors.white,
-                                size: 15,
+                                size: 14.0,
                               ),
                               onPressed: () {
                                 final resourceURL =

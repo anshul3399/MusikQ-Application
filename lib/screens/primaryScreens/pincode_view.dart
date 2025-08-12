@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:music_manager/screens/authentication/sign_in_widget.dart';
 import 'package:music_manager/screens/primaryScreens/operations_and_configurations_view.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -312,12 +313,19 @@ class _SecurityPinViewState extends State<SecurityPinView> {
                             final provider = Provider.of<GoogleSignInProvider>(
                                 context,
                                 listen: false);
+                            
+                            // Perform logout which now includes DB cleanup
                             await provider.googleLogout();
-                            // Delete the stored local 'songs.db' on logout of the user
-                            await SongsDatabase.instance
-                                .deleteSongsDB('songs.db', showToastMsg: false);
+                            
                             if (mounted) {
-                              Navigator.pop(context);
+                              // Pop until we reach the root
+                              Navigator.of(context).popUntil((route) => route.isFirst);
+                              // Replace the current screen with SignInWidget
+                              Navigator.of(context).pushReplacement(
+                                MaterialPageRoute(
+                                  builder: (context) => SignInWidget(),
+                                ),
+                              );
                             }
                           },
                           icon: Icon(

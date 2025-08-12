@@ -18,12 +18,15 @@ class AuthenticationWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: StreamBuilder(
+      body: StreamBuilder<User?>(
           stream: FirebaseAuth.instance.authStateChanges(),
           builder: (context, snapshot) {
+            debugPrint("Auth state changed: ${snapshot.data}"); // Debug log
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return CircularProgressIndicator();
-            } else if (snapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasData && snapshot.data != null) {
+              debugPrint(
+                  "User is authenticated: ${snapshot.data?.uid}"); // Debug log
               return MultiProvider(
                 providers: [
                   // Application Configuration Data Stream Provider
@@ -46,13 +49,15 @@ class AuthenticationWrapper extends StatelessWidget {
                         .userData,
                   ),
                 ],
-                child: HomePage(),
+                child: const HomePage(),
               );
             } else if (snapshot.hasError) {
+              debugPrint("Auth error: ${snapshot.error}"); // Debug log
               return Center(
-                child: Text("Something went wrong! :("),
+                child: Text("Authentication error: ${snapshot.error}"),
               );
             } else {
+              debugPrint("No user authenticated, showing sign in"); // Debug log
               return SignInWidget();
             }
           }),

@@ -15,6 +15,7 @@ void main() async {
   // await SheetsApi.init();
   runApp(MultiProvider(providers: [
     ChangeNotifierProvider(create: (_) => GradientBackgroundTheme()),
+    ChangeNotifierProvider(create: (_) => GoogleSignInProvider()),
     // ChangeNotifierProvider(
     //   create: (_) => AppConfiguration(appAccessKey: '', accessPIN: ''),
     // ),
@@ -26,16 +27,13 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => GoogleSignInProvider(),
-      child: MaterialApp(
-        title: 'MuiskQ',
-        debugShowCheckedModeBanner: false, // To remove the debug banner
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-        ),
-        home: AuthenticationWrapper(),
+    return MaterialApp(
+      title: 'MuiskQ',
+      debugShowCheckedModeBanner: false, // To remove the debug banner
+      theme: ThemeData(
+        primarySwatch: Colors.grey,
       ),
+      home: const AuthenticationWrapper(),
     );
   }
 }

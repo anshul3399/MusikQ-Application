@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:music_manager/screens/authentication/sign_in_widget.dart';
 import 'package:music_manager/services/model/app_user.dart';
+import 'package:music_manager/services/model/songs_database.dart';
 
 class GoogleSignInProvider extends ChangeNotifier {
   // create user object based on FirebaseUser
@@ -17,45 +18,60 @@ class GoogleSignInProvider extends ChangeNotifier {
 
   GoogleSignInAccount get user => _user!;
 
-  Future? googleLogin({required BuildContext context}) async {
+  Future<AppUser?> googleLogin({required BuildContext context}) async {
     try {
+      debugPrint("Starting Google Sign In process");
+
       final googleSignIn = GoogleSignIn();
 
+      // Sign out of existing sessions
+      await googleSignIn.signOut();
+      await FirebaseAuth.instance.signOut();
+
+      // Start new sign in flow
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
 
-      _user = googleUser;
-
       if (googleUser == null) {
-        debugPrint(">> User didn't selected any option from google account.");
+        debugPrint("User cancelled the sign-in process");
         return null;
-      } else {
-        final googleAuth = await googleUser.authentication;
-        final credential = GoogleAuthProvider.credential(
-          accessToken: googleAuth.accessToken,
-          idToken: googleAuth.idToken,
-        );
+      }
 
-        UserCredential result =
-            await FirebaseAuth.instance.signInWithCredential(credential);
-        User? user = result.user;
+      debugPrint("Getting Google auth credentials");
+      final googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
 
-        // if the user doesn't exists, create a new document for the user with the uid
+      debugPrint("Signing in with Firebase");
+      final UserCredential result =
+          await FirebaseAuth.instance.signInWithCredential(credential);
+      final User? user = result.user;
+
+      if (user != null) {
+        debugPrint("Successfully signed in with Firebase: ${user.uid}");
+        _user = googleUser;
+
+        // Create/update user document in Firestore
         final DocumentReference usersRef =
-            FirebaseFirestore.instance.collection('userData').doc(user!.uid);
-        usersRef.get().then((docSnapshot) => {
-              if (!docSnapshot.exists)
-                {
-                  usersRef.set({
-                    'email': user.email,
-                    'appAccessKey': '',
-                    'userPrivilegeLevel': 0,
-                    'remotelyDeleteDB': false
-                  }) // create the document
-                }
-            });
+            FirebaseFirestore.instance.collection('userData').doc(user.uid);
+        final docSnapshot = await usersRef.get();
+
+        if (!docSnapshot.exists) {
+          debugPrint("Creating new user document in Firestore");
+          await usersRef.set({
+            'email': user.email,
+            'appAccessKey': '',
+            'userPrivilegeLevel': 0,
+            'remotelyDeleteDB': false
+          });
+        }
 
         notifyListeners();
         return _userFromFirebaseUser(user);
+      } else {
+        debugPrint("Failed to get user after Firebase sign in");
+        return null;
       }
     } catch (e) {
       debugPrint("[Error]: Exception in google login method - \n$e");
@@ -69,8 +85,16 @@ class GoogleSignInProvider extends ChangeNotifier {
 
   Future googleLogout() async {
     try {
+      // Delete the local database first
+      await SongsDatabase.instance
+          .deleteSongsDB('songs.db', showToastMsg: false);
+
+      // Then sign out from Google and Firebase
       await googleSignIn.disconnect();
-      FirebaseAuth.instance.signOut();
+      await FirebaseAuth.instance.signOut();
+
+      _user = null;
+      notifyListeners();
     } catch (e) {
       debugPrint("[Error]: Exception in google logout method - \n$e");
     }

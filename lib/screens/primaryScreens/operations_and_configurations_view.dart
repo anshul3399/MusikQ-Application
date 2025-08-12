@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:music_manager/screens/primaryScreens/filtered_result_list.dart';
 import 'package:music_manager/services/model/song_record.dart';
 import 'package:music_manager/services/providers/app_bg_gradient_provider.dart';
-import 'package:music_manager/services/sheets%20api/sheets_api.dart';
+import "package:music_manager/services/sheets%20api/sheets_api.dart";
 import 'package:music_manager/services/model/songs_database.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:music_manager/shared/theme_constants.dart';
@@ -11,7 +10,6 @@ import 'package:provider/provider.dart';
 import 'package:restart_app/restart_app.dart';
 import 'package:music_manager/shared/loading_widget.dart';
 
-// ignore: must_be_immutable
 class OperationsAndConfigurationsView extends StatefulWidget {
   const OperationsAndConfigurationsView({super.key});
 
@@ -22,263 +20,69 @@ class OperationsAndConfigurationsView extends StatefulWidget {
 
 class _OperationsAndConfigurationsViewState
     extends State<OperationsAndConfigurationsView> {
+  bool _fetchAndAddPressed = false;
+  String _fetchBtnText = "Fetch Data from Online & Add into local DB";
+
   Future<int> initialiseSheet() async {
     await SheetsApi.init();
     return 1;
   }
 
-  @override
-  Widget build(BuildContext context) {
-    bool fetchAndAddPressed = false;
-    String fetchBtnText = "Fetch Data from Online & Add into local DB";
-    double fetchBtnWidth = 150;
-
-    return FutureBuilder(
-      builder: (context, snapshot) {
-        // Checking if future is resolved or not
-        if (snapshot.connectionState == ConnectionState.done) {
-          // If we got an error
-          if (snapshot.hasError) {
-            return Center(
-              child: Text(
-                '${snapshot.error} occurred',
-                style: TextStyle(fontSize: 18, color: Colors.white),
-              ),
-            );
-
-            // if we got our data
-          } else if (snapshot.hasData) {
-            // Extracting data from snapshot object
-            return Container(
-              padding: EdgeInsets.fromLTRB(20, 80, 20, 0),
-              decoration: CustomBackgroundGradientStyles.applicationBackground(
-                  context.read<GradientBackgroundTheme>().bgThemeType),
-              alignment: Alignment.topLeft,
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    StatefulBuilder(builder: (context, setState) {
-                      return ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                            backgroundColor: Color.fromARGB(255, 67, 67, 67),
-                            foregroundColor: Color.fromARGB(255, 220, 220, 220),
-                            minimumSize: Size(fetchBtnWidth, 40),
-                            elevation: 0.0,
-                            shape: StadiumBorder()),
-                        onPressed: () async {
-                          await SongsDatabase.instance
-                              .deleteSongsDB('songs.db');
-                          setState(() {
-                            fetchAndAddPressed = true;
-                            fetchBtnText = "Fetching & Adding..";
-                            fetchBtnWidth = 100.0;
-                          });
-                          List<SongData>? songsDB =
-                              await SheetsApi.getAllRows();
-                          // debugPrint(">>> Inside OperationsAndConfigurationsView Data = ${songsDB}");
-                          for (int i = 0; i < songsDB!.length; i++) {
-                            await SongsDatabase.instance.create(songsDB[i]);
-                            setState((() {
-                              fetchBtnText =
-                                  "${songsDB[i].songID}\tFetching & Adding..";
-                            }));
-                            debugPrint(
-                                ">> Added Item in DB: ${songsDB[i].songID} -> ${songsDB[i].songTitle}");
-                          }
-                          setState(() {
-                            fetchAndAddPressed = false;
-                            fetchBtnText =
-                                "Fetch Data from Online & Add into local DB";
-                            fetchBtnWidth = 150.0;
-                          });
-                          if (mounted) {
-                            showRestartDialogBox(context,
-                                titleMsg: 'Restart Required',
-                                descriptionMsg:
-                                    'The database was reinitialised, updated data may have been populated. Please restart the app to reflect changes.');
-                          }
-
-                          // showDialog(
-                          //     context: context,
-                          //     barrierDismissible: false,
-                          //     builder: (BuildContext context) {
-                          //       return Dialog(
-                          //         shape: RoundedRectangleBorder(
-                          //           borderRadius: BorderRadius.circular(20),
-                          //         ),
-                          //         elevation: 10,
-                          //         backgroundColor: Colors.transparent,
-                          //         child: contentBox(context),
-                          //       );
-                          //     });
-                        },
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            (fetchAndAddPressed == true)
-                                ? SpinKitChasingDots(
-                                    color: Color.fromARGB(255, 210, 210, 210),
-                                    size: 12.0,
-                                  )
-                                : Container(),
-                            SizedBox(
-                              width: 3,
-                            ),
-                            Text(fetchBtnText,
-                                style: GoogleFonts.jost(
-                                    fontWeight: FontWeight.w400, fontSize: 14)),
-                          ],
-                        ),
-                      );
-                    }),
-                    SizedBox(
-                      height: 20,
-                    ),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: Color.fromARGB(255, 67, 67, 67),
-                          foregroundColor: Color.fromARGB(255, 220, 220, 220),
-                          minimumSize: const Size(150, 40),
-                          elevation: 0.0,
-                          shape: StadiumBorder()),
-                      onPressed: () async {
-                        List<SongData> returnedDataFromDB =
-                            await SongsDatabase.instance.readAllSongs();
-                        for (int i = 0; i < returnedDataFromDB.length; i++) {
-                          debugPrint(
-                              ">> Items in DB: ${returnedDataFromDB[i].songID} -- ${returnedDataFromDB[i].songTitle}");
-                        }
-                        debugPrint(
-                            ">> Total Returned Data from database: ${returnedDataFromDB.length}");
-                      },
-                      child: Text('Get All Data from Local Storage',
-                          style: GoogleFonts.jost(
-                              fontWeight: FontWeight.w400, fontSize: 14)),
-                    ),
-                    SizedBox(
-                      height: 20,
-                    ),
-                    // Get from specific ID
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: Color.fromARGB(255, 67, 67, 67),
-                          foregroundColor: Color.fromARGB(255, 220, 220, 220),
-                          minimumSize: const Size(150, 40),
-                          elevation: 0.0,
-                          shape: StadiumBorder()),
-                      onPressed: () async {
-                        SongData returnedDataFromDB = await SongsDatabase
-                            .instance
-                            .readNode('at_xxf3f672');
-
-                        debugPrint(
-                            ">> Items in DB: ${returnedDataFromDB.songID} -- ${returnedDataFromDB.songTitle}, Singers-${returnedDataFromDB.singers}");
-                      },
-                      child: Text('Get Specific data from Local Storage',
-                          style: GoogleFonts.jost(
-                              fontWeight: FontWeight.w400, fontSize: 14)),
-                    ),
-                    SizedBox(
-                      height: 20,
-                    ),
-
-                    // Fire query on Local Database Songs DB
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: Color.fromARGB(255, 67, 67, 67),
-                          foregroundColor: Color.fromARGB(255, 220, 220, 220),
-                          minimumSize: const Size(150, 40),
-                          elevation: 0.0,
-                          shape: StadiumBorder()),
-                      onPressed: () async {
-                        List<SongData> filteredResultList =
-                            await SongsDatabase.instance.queryDatabase();
-                        if (mounted) {
-                          _navigateToNextScreen(context, filteredResultList);
-                        }
-                      },
-                      child: Text('Fire Query on Local DB',
-                          style: GoogleFonts.jost(
-                              fontWeight: FontWeight.w400, fontSize: 14)),
-                    ),
-
-                    SizedBox(
-                      height: 20,
-                    ),
-
-                    // Get distinct years form Local Database Songs DB
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: Color.fromARGB(255, 67, 67, 67),
-                          foregroundColor: Color.fromARGB(255, 220, 220, 220),
-                          minimumSize: const Size(150, 40),
-                          elevation: 0.0,
-                          shape: StadiumBorder()),
-                      onPressed: () async {
-                        List distinctLyricist = await SongsDatabase.instance
-                            .queryForDistinctConsolidatedvalues('Lyricist');
-                        debugPrint(">> Distinct Lyricist: $distinctLyricist");
-                      },
-                      child: Text('Get distinct Lyricists',
-                          style: GoogleFonts.jost(
-                              fontWeight: FontWeight.w400, fontSize: 14)),
-                    ),
-
-                    SizedBox(
-                      height: 20,
-                    ),
-
-                    // Delete Songs DB
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: Color.fromARGB(255, 67, 67, 67),
-                          foregroundColor: Color.fromARGB(255, 220, 220, 220),
-                          minimumSize: const Size(150, 40),
-                          elevation: 0.0,
-                          shape: StadiumBorder()),
-                      onPressed: () async {
-                        await SongsDatabase.instance.deleteSongsDB('songs.db');
-                        if (mounted) {
-                          showRestartDialogBox(context,
-                              titleMsg: 'Restart Required',
-                              descriptionMsg:
-                                  'The database was deleted. Please restart the app to the reflect changes.');
-                        }
-                      },
-                      child: Text('Delete Songs DB from Local Storage',
-                          style: GoogleFonts.jost(
-                              fontWeight: FontWeight.w400, fontSize: 14)),
-                    ),
-                  ],
+  Widget buildActionButton({
+    required VoidCallback onPressed,
+    required String text,
+    required IconData icon,
+    bool isLoading = false,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.white.withOpacity(0.2),
+          foregroundColor: Colors.white,
+          minimumSize: const Size(double.infinity, 50),
+          elevation: 0.0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        onPressed: onPressed,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (isLoading)
+              const SpinKitChasingDots(
+                color: Colors.white,
+                size: 20.0,
+              )
+            else
+              Icon(icon, size: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Text(
+                  text,
+                  style: GoogleFonts.jost(
+                    fontWeight: FontWeight.w400,
+                    fontSize: 16,
+                  ),
+                  maxLines: 1,
                 ),
               ),
-            );
-          }
-        }
-
-        // Displaying LoadingSpinner to indicate waiting state
-        return Loading(textToDisplay: "Initialising Sheet..");
-      },
-
-      // Future that needs to be resolved
-      // inorder to display something on the Canvas
-      future: initialiseSheet(),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
-  void _navigateToNextScreen(BuildContext context, List<SongData> list) {
-    Navigator.of(context).push(MaterialPageRoute(
-        builder: (context) => FilteredResultListView(
-              filteredResultList: list,
-            )));
-  }
-}
-
-void showRestartDialogBox(BuildContext context,
-    {required String titleMsg, required String descriptionMsg}) {
-  bool restartBtnPressed = false;
-  showDialog(
+  void showRestartDialogBox(
+    BuildContext context, {
+    required String titleMsg,
+    required String descriptionMsg,
+  }) {
+    showDialog(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
@@ -286,190 +90,257 @@ void showRestartDialogBox(BuildContext context,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
-          elevation: 10,
-          backgroundColor: Colors.transparent,
-          child: Stack(
-            children: <Widget>[
-              Container(
-                padding: EdgeInsets.only(
-                    left: 20, top: 30 + 20, right: 20, bottom: 20),
-                margin: EdgeInsets.only(top: 30),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  gradient: LinearGradient(
-                    colors: // Grey-Black Gradient
-                        const [
-                      Color.fromARGB(255, 40, 40, 40),
-                      Color.fromARGB(255, 28, 28, 28),
-                      Colors.black
-                    ],
-                    stops: const [0.16, 0.5, 0.9],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
+          backgroundColor: Colors.black87,
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // App Icon
+                Container(
+                  width: 80,
+                  height: 80,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Image.asset('assets/app_icon.png'),
+                ),
+                const SizedBox(height: 24),
+                // Title
+                Text(
+                  titleMsg,
+                  style: GoogleFonts.jost(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                // Description
+                Text(
+                  descriptionMsg,
+                  style: GoogleFonts.jost(
+                    color: Colors.white70,
+                    fontSize: 16,
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 32),
+                // Action Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Restart.restartApp();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white.withOpacity(0.2),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.refresh_rounded, size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Restart Now',
+                          style: GoogleFonts.jost(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Text(
-                      titleMsg,
-                      style: GoogleFonts.jost(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 18,
-                          letterSpacing: 1.7,
-                          color: Colors.white),
-                    ),
-                    SizedBox(
-                      height: 10,
-                    ),
-                    Text(
-                      descriptionMsg,
-                      style: GoogleFonts.jost(
-                          fontWeight: FontWeight.w400,
-                          fontSize: 14,
-                          color: Color.fromARGB(255, 216, 216, 216)),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(
-                      height: 20,
-                    ),
-                    Align(
-                        alignment: Alignment.bottomCenter,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            restartBtnPressed = true;
-                            Restart.restartApp();
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: (restartBtnPressed == false)
-                                ? Colors.transparent
-                                : Colors.white,
-                            foregroundColor: (restartBtnPressed == false)
-                                ? Colors.white
-                                : Colors.black,
-                            side: BorderSide(
-                                width: 1,
-                                color: Color.fromARGB(255, 255, 255, 255)),
-                            shape: RoundedRectangleBorder(
-                              //to set border radius to button
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            minimumSize: const Size(70, 30),
-                            // elevation: 5.0,
-                          ),
-                          child: Text('Restart',
-                              style: GoogleFonts.jost(
-                                  fontWeight: FontWeight.w400, fontSize: 15)),
-                        )),
-                  ],
-                ),
-              ),
-              Positioned(
-                left: 20,
-                right: 20,
-                child: CircleAvatar(
-                  backgroundColor: Colors.transparent,
-                  radius: 30,
-                  child: ClipRRect(
-                      borderRadius: BorderRadius.all(Radius.circular(30)),
-                      child: Image.asset("assets/gramophone.png")),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
-      });
-}
+      },
+    );
+  }
 
-// contentBox(context) {
-//   bool restartBtnPressed = false;
-//   return Stack(
-//     children: <Widget>[
-//       Container(
-//         padding: EdgeInsets.only(left: 20, top: 30 + 20, right: 20, bottom: 20),
-//         margin: EdgeInsets.only(top: 30),
-//         decoration: BoxDecoration(
-//           borderRadius: BorderRadius.circular(20),
-//           gradient: LinearGradient(
-//             colors: // Grey-Black Gradient
-//                 const [
-//               Color.fromARGB(255, 40, 40, 40),
-//               Color.fromARGB(255, 28, 28, 28),
-//               Colors.black
-//             ],
-//             stops: const [0.16, 0.5, 0.9],
-//             begin: Alignment.topCenter,
-//             end: Alignment.bottomCenter,
-//           ),
-//         ),
-//         child: Column(
-//           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-//           mainAxisSize: MainAxisSize.min,
-//           children: <Widget>[
-//             Text(
-//               'Restart Required',
-//               style: GoogleFonts.jost(
-//                   fontWeight: FontWeight.w600,
-//                   fontSize: 18,
-//                   letterSpacing: 1.7,
-//                   color: Colors.white),
-//             ),
-//             SizedBox(
-//               height: 10,
-//             ),
-//             Text(
-//               'The database was reinitialised, updated data may have been populated. Please restart the app to reflect changes.',
-//               style: GoogleFonts.jost(
-//                   fontWeight: FontWeight.w400,
-//                   fontSize: 14,
-//                   color: Color.fromARGB(255, 216, 216, 216)),
-//               textAlign: TextAlign.center,
-//             ),
-//             SizedBox(
-//               height: 20,
-//             ),
-//             Align(
-//                 alignment: Alignment.bottomCenter,
-//                 child: ElevatedButton(
-//                   onPressed: () {
-//                     restartBtnPressed = true;
-//                     Restart.restartApp();
-//                   },
-//                   style: ElevatedButton.styleFrom(
-//                     backgroundColor: (restartBtnPressed == false)
-//                         ? Colors.transparent
-//                         : Colors.white,
-//                     foregroundColor: (restartBtnPressed == false)
-//                         ? Colors.white
-//                         : Colors.black,
-//                     side: BorderSide(
-//                         width: 1, color: Color.fromARGB(255, 255, 255, 255)),
-//                     shape: RoundedRectangleBorder(
-//                       //to set border radius to button
-//                       borderRadius: BorderRadius.circular(30),
-//                     ),
-//                     minimumSize: const Size(70, 30),
-//                     // elevation: 5.0,
-//                   ),
-//                   child: Text('Restart',
-//                       style: GoogleFonts.jost(
-//                           fontWeight: FontWeight.w400, fontSize: 15)),
-//                 )),
-//           ],
-//         ),
-//       ),
-//       Positioned(
-//         left: 20,
-//         right: 20,
-//         child: CircleAvatar(
-//           backgroundColor: Colors.transparent,
-//           radius: 30,
-//           child: ClipRRect(
-//               borderRadius: BorderRadius.all(Radius.circular(30)),
-//               child: Image.asset("assets/gramophone.png")),
-//         ),
-//       ),
-//     ],
-//   );
-// }
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<int>(
+      future: initialiseSheet(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Loading(textToDisplay: "Initialising Sheet..");
+        }
+
+        if (snapshot.hasError) {
+          return Center(
+            child: Text(
+              "${snapshot.error} occurred",
+              style: const TextStyle(fontSize: 18, color: Colors.white),
+            ),
+          );
+        }
+
+        return Container(
+          padding: const EdgeInsets.fromLTRB(20, 80, 20, 0),
+          decoration: CustomBackgroundGradientStyles.applicationBackground(
+              context.read<GradientBackgroundTheme>().bgThemeType),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 40),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Actions Section
+                  Card(
+                    color: Colors.white.withOpacity(0.1),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Actions",
+                            style: GoogleFonts.jost(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          buildActionButton(
+                            onPressed: () async {
+                              setState(() {
+                                _fetchAndAddPressed = true;
+                                _fetchBtnText = "Fetching & Adding..";
+                              });
+
+                              await SongsDatabase.instance
+                                  .deleteSongsDB("songs.db");
+                              List<SongData>? songsDB =
+                                  await SheetsApi.getAllRows();
+
+                              for (int i = 0; i < songsDB!.length; i++) {
+                                await SongsDatabase.instance.create(songsDB[i]);
+                                if (mounted) {
+                                  setState(() {
+                                    _fetchBtnText =
+                                        "${songsDB[i].songID}\tFetching & Adding..";
+                                  });
+                                }
+                              }
+
+                              if (mounted) {
+                                setState(() {
+                                  _fetchAndAddPressed = false;
+                                  _fetchBtnText =
+                                      "Fetch Data from Online & Add into local DB";
+                                });
+
+                                showRestartDialogBox(
+                                  context,
+                                  titleMsg: "Restart Required",
+                                  descriptionMsg:
+                                      "The database was reinitialised, updated data may have been populated. Please restart the app to reflect changes.",
+                                );
+                              }
+                            },
+                            text: _fetchBtnText,
+                            icon: Icons.cloud_download_rounded,
+                            isLoading: _fetchAndAddPressed,
+                          ),
+                          buildActionButton(
+                            onPressed: () async {
+                              List<SongData> returnedDataFromDB =
+                                  await SongsDatabase.instance.readAllSongs();
+                              for (var song in returnedDataFromDB) {
+                                debugPrint(
+                                    ">> Items in DB: ${song.songID} -- ${song.songTitle}");
+                              }
+                              debugPrint(
+                                  ">> Total Returned Data from database: ${returnedDataFromDB.length}");
+                            },
+                            text: "View Local Database",
+                            icon: Icons.storage_rounded,
+                          ),
+                          buildActionButton(
+                            onPressed: () async {
+                              await SongsDatabase.instance
+                                  .deleteSongsDB("songs.db");
+                              if (mounted) {
+                                showRestartDialogBox(
+                                  context,
+                                  titleMsg: "Restart Required",
+                                  descriptionMsg:
+                                      "The database was deleted. Please restart the app to reflect changes.",
+                                );
+                              }
+                            },
+                            text: "Delete Local Database",
+                            icon: Icons.delete_forever_rounded,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // Configurations Section
+                  const SizedBox(height: 20),
+                  Card(
+                    color: Colors.white.withOpacity(0.1),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Configurations",
+                            style: GoogleFonts.jost(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.05),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              "No configurations available yet",
+                              style: GoogleFonts.jost(
+                                color: Colors.white.withOpacity(0.7),
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}

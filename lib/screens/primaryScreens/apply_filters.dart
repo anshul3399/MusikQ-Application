@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:music_manager/screens/primaryScreens/filtered_result_list.dart';
+import 'package:music_manager/screens/primaryScreens/search_overlay.dart';
 import 'package:music_manager/services/model/filter_chips.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:music_manager/services/model/song_record.dart';
@@ -38,6 +39,8 @@ class ApplyFilters extends StatefulWidget {
 
 class _ApplyFiltersState extends State<ApplyFilters> {
   final double spacing = 8.0;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   // Primary Search Labels chip associated variables
   double primarySearchLabelsContainerHeight = 70;
@@ -66,11 +69,72 @@ class _ApplyFiltersState extends State<ApplyFilters> {
   final TextEditingController fromYearController = TextEditingController();
   final TextEditingController toYearController = TextEditingController();
 
+  Widget _buildFilterHeader(String title, bool hasSelected,
+      VoidCallback onClear, VoidCallback onSearch, VoidCallback onTitleTap) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: GestureDetector(
+            onTap: onTitleTap,
+            child: Text(
+              title,
+              style: CustomTextStyles.headingsTextStyle,
+            ),
+          ),
+        ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: Icon(Icons.search, color: Colors.white70),
+              onPressed: onSearch,
+            ),
+            IconButton(
+              icon: Icon(Icons.clear_all_rounded,
+                  color: hasSelected ? Colors.white : Colors.white24),
+              onPressed: hasSelected ? onClear : null,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   @override
   void dispose() {
     fromYearController.dispose();
     toYearController.dispose();
+    _searchController.dispose();
     super.dispose();
+  }
+
+  void _showSearchOverlay(
+      BuildContext context,
+      String title,
+      List<FilterChipData> chips,
+      List<String> selectedItems,
+      void Function(List<FilterChipData>, List<String>) callback) {
+    _searchController.clear();
+
+    showDialog(
+      context: context,
+      barrierColor: Colors.black54,
+      builder: (context) => SearchOverlay(
+        title: title,
+        chips: chips,
+        selectedItems: selectedItems,
+        onUpdate: (chips, items) {
+          setState(() {
+            callback(chips, items);
+          });
+        },
+        searchController: _searchController,
+        onSearchChanged:
+            (_) {}, // We don't need this anymore as search is handled in SearchOverlay
+        searchQuery: '', // Initial empty query
+      ),
+    );
   }
 
   void updateYearsRange() {
@@ -373,37 +437,31 @@ class _ApplyFiltersState extends State<ApplyFilters> {
             children: [
               // Primary Search Labels Filter Components
               // Primary Search Labels Text-Tappable
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        primarySearchLabelsContainerToggle =
-                            !primarySearchLabelsContainerToggle;
-                        primarySearchLabelsContainerHeight =
-                            (primarySearchLabelsContainerToggle == false)
-                                ? 70
-                                : 250;
-                        primarySearchLabelsContainerWidth =
-                            (primarySearchLabelsContainerToggle == false)
-                                ? 90
-                                : MediaQuery.of(context).size.width * 0.9;
-                      });
-                    },
-                    child: Text(
-                      "Primary Search Labels",
-                      style: CustomTextStyles.headingsTextStyle,
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.clear_all_rounded, color: Colors.white),
-                    tooltip: 'Clear Primary Search Labels',
-                    onPressed: selectedPrimarySearchLabels.isNotEmpty
-                        ? resetPrimarySearchLabelsChips
-                        : null, // Disable if nothing is selected
-                  ),
-                ],
+              _buildFilterHeader(
+                'Primary Tags',
+                selectedPrimarySearchLabels.isNotEmpty,
+                resetPrimarySearchLabelsChips,
+                () => _showSearchOverlay(
+                  context,
+                  'Primary Tags',
+                  widget.primarySearchLabelsChips,
+                  selectedPrimarySearchLabels,
+                  callbackPrimarySearchLabelsUpdatedFilterChipList,
+                ),
+                () {
+                  setState(() {
+                    primarySearchLabelsContainerToggle =
+                        !primarySearchLabelsContainerToggle;
+                    primarySearchLabelsContainerHeight =
+                        primarySearchLabelsContainerToggle
+                            ? MediaQuery.of(context).size.height * 0.4
+                            : 70;
+                    primarySearchLabelsContainerWidth =
+                        primarySearchLabelsContainerToggle
+                            ? MediaQuery.of(context).size.width * 0.9
+                            : 90;
+                  });
+                },
               ),
               // Primary Search Labels-Chips Animated Container
               AnimatedContainer(
@@ -429,37 +487,29 @@ class _ApplyFiltersState extends State<ApplyFilters> {
 
               // Secondary Search Labels Filter Components
               // Secondary Search Labels Text-Tappable
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        secondarySearchLabelsContainerToggle =
-                            !secondarySearchLabelsContainerToggle;
-                        secondarySearchLabelsContainerHeight =
-                            (secondarySearchLabelsContainerToggle == false)
-                                ? 70
-                                : 250;
-                        secondarySearchLabelsContainerWidth =
-                            (secondarySearchLabelsContainerToggle == false)
-                                ? 90
-                                : MediaQuery.of(context).size.width * 0.9;
-                      });
-                    },
-                    child: Text(
-                      "Secondary Search Labels",
-                      style: CustomTextStyles.headingsTextStyle,
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.clear_all_rounded, color: Colors.white),
-                    tooltip: 'Clear Secondary Search Labels',
-                    onPressed: selectedSecondarySearchLabels.isNotEmpty
-                        ? resetSecondarySearchLabelsChips
-                        : null, // Disable if nothing is selected
-                  ),
-                ],
+              _buildFilterHeader(
+                'Secondary Tags',
+                selectedSecondarySearchLabels.isNotEmpty,
+                resetSecondarySearchLabelsChips,
+                () => _showSearchOverlay(
+                  context,
+                  'Secondary Tags',
+                  widget.secondarySearchLabelsChips,
+                  selectedSecondarySearchLabels,
+                  callbackSecondarySearchLabelsUpdatedFilterChipList,
+                ),
+                () {
+                  setState(() {
+                    secondarySearchLabelsContainerToggle =
+                        !secondarySearchLabelsContainerToggle;
+                    secondarySearchLabelsContainerHeight =
+                        secondarySearchLabelsContainerToggle ? 250 : 70;
+                    secondarySearchLabelsContainerWidth =
+                        secondarySearchLabelsContainerToggle
+                            ? MediaQuery.of(context).size.width * 0.9
+                            : 90;
+                  });
+                },
               ),
               // Secondary Search Labels-Chips Animated Container
               AnimatedContainer(
@@ -663,33 +713,26 @@ class _ApplyFiltersState extends State<ApplyFilters> {
 
               // Singers Filter Components
               // Singers Text-Tappable
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        singerContainerToggle = !singerContainerToggle;
-                        singerContainerHeight =
-                            (singerContainerToggle == false) ? 70 : 250;
-                        singerContainerWidth = (singerContainerToggle == false)
-                            ? 90
-                            : MediaQuery.of(context).size.width * 0.9;
-                      });
-                    },
-                    child: Text(
-                      "Singers",
-                      style: CustomTextStyles.headingsTextStyle,
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.clear_all_rounded, color: Colors.white),
-                    tooltip: 'Clear Singers',
-                    onPressed: selectedSingers.isNotEmpty
-                        ? resetSingersChips
-                        : null, // Disable if nothing is selected
-                  ),
-                ],
+              _buildFilterHeader(
+                'Singers',
+                selectedSingers.isNotEmpty,
+                resetSingersChips,
+                () => _showSearchOverlay(
+                  context,
+                  'Singers',
+                  widget.singerChips,
+                  selectedSingers,
+                  callbackUpdatedFilterChipList,
+                ),
+                () {
+                  setState(() {
+                    singerContainerToggle = !singerContainerToggle;
+                    singerContainerHeight = singerContainerToggle ? 250 : 70;
+                    singerContainerWidth = singerContainerToggle
+                        ? MediaQuery.of(context).size.width * 0.9
+                        : 90;
+                  });
+                },
               ),
               // Singers-Chips Animated Container
               AnimatedContainer(
@@ -713,35 +756,28 @@ class _ApplyFiltersState extends State<ApplyFilters> {
 
               // Music Director Filter Components
               // Music Director Text-Tappable
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        musicdirectorContainerToggle =
-                            !musicdirectorContainerToggle;
-                        musicdirectorContainerHeight =
-                            (musicdirectorContainerToggle == false) ? 70 : 250;
-                        musicdirectorContainerWidth =
-                            (musicdirectorContainerToggle == false)
-                                ? 90
-                                : MediaQuery.of(context).size.width * 0.9;
-                      });
-                    },
-                    child: Text(
-                      "Music Directors",
-                      style: CustomTextStyles.headingsTextStyle,
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.clear_all_rounded, color: Colors.white),
-                    tooltip: 'Clear Music Directors',
-                    onPressed: selectedMusicDirectors.isNotEmpty
-                        ? resetMusicDirectorsChips
-                        : null, // Disable if nothing is selected
-                  ),
-                ],
+              _buildFilterHeader(
+                'Music Directors',
+                selectedMusicDirectors.isNotEmpty,
+                resetMusicDirectorsChips,
+                () => _showSearchOverlay(
+                  context,
+                  'Music Directors',
+                  widget.musicDirectorChips,
+                  selectedMusicDirectors,
+                  callbackMusicDirectorsUpdatedFilterChipList,
+                ),
+                () {
+                  setState(() {
+                    musicdirectorContainerToggle =
+                        !musicdirectorContainerToggle;
+                    musicdirectorContainerHeight =
+                        musicdirectorContainerToggle ? 250 : 70;
+                    musicdirectorContainerWidth = musicdirectorContainerToggle
+                        ? MediaQuery.of(context).size.width * 0.9
+                        : 90;
+                  });
+                },
               ),
               // Music Director-Chips Animated Container
               AnimatedContainer(
@@ -767,34 +803,27 @@ class _ApplyFiltersState extends State<ApplyFilters> {
 
               // Lyricist Filter Components
               // Lyricist Text-Tappable
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        lyricistContainerToggle = !lyricistContainerToggle;
-                        lyricistContainerHeight =
-                            (lyricistContainerToggle == false) ? 70 : 250;
-                        lyricistContainerWidth =
-                            (lyricistContainerToggle == false)
-                                ? 90
-                                : MediaQuery.of(context).size.width * 0.9;
-                      });
-                    },
-                    child: Text(
-                      "Lyricist",
-                      style: CustomTextStyles.headingsTextStyle,
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.clear_all_rounded, color: Colors.white),
-                    tooltip: 'Clear Lyricist',
-                    onPressed: selectedLyricist.isNotEmpty
-                        ? resetLyricistChips
-                        : null, // Disable if nothing is selected
-                  ),
-                ],
+              _buildFilterHeader(
+                'Lyricist',
+                selectedLyricist.isNotEmpty,
+                resetLyricistChips,
+                () => _showSearchOverlay(
+                  context,
+                  'Lyricist',
+                  widget.lyricistChips,
+                  selectedLyricist,
+                  callbackLyricistUpdatedFilterChipList,
+                ),
+                () {
+                  setState(() {
+                    lyricistContainerToggle = !lyricistContainerToggle;
+                    lyricistContainerHeight =
+                        lyricistContainerToggle ? 250 : 70;
+                    lyricistContainerWidth = lyricistContainerToggle
+                        ? MediaQuery.of(context).size.width * 0.9
+                        : 90;
+                  });
+                },
               ),
               // Lyricist-Chips Animated Container
               AnimatedContainer(
@@ -818,34 +847,26 @@ class _ApplyFiltersState extends State<ApplyFilters> {
 
               // Artists Filter Components
               // Artists Text-Tappable
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        artistsContainerToggle = !artistsContainerToggle;
-                        artistsContainerHeight =
-                            (artistsContainerToggle == false) ? 70 : 250;
-                        artistsContainerWidth =
-                            (artistsContainerToggle == false)
-                                ? 90
-                                : MediaQuery.of(context).size.width * 0.9;
-                      });
-                    },
-                    child: Text(
-                      "Artists",
-                      style: CustomTextStyles.headingsTextStyle,
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.clear_all_rounded, color: Colors.white),
-                    tooltip: 'Clear Artists',
-                    onPressed: selectedArtists.isNotEmpty
-                        ? resetArtistsChips
-                        : null, // Disable if nothing is selected
-                  ),
-                ],
+              _buildFilterHeader(
+                'Artists',
+                selectedArtists.isNotEmpty,
+                resetArtistsChips,
+                () => _showSearchOverlay(
+                  context,
+                  'Artists',
+                  widget.artistsChips,
+                  selectedArtists,
+                  callbackArtistsUpdatedFilterChipList,
+                ),
+                () {
+                  setState(() {
+                    artistsContainerToggle = !artistsContainerToggle;
+                    artistsContainerHeight = artistsContainerToggle ? 250 : 70;
+                    artistsContainerWidth = artistsContainerToggle
+                        ? MediaQuery.of(context).size.width * 0.9
+                        : 90;
+                  });
+                },
               ),
               // Artists-Chips Animated Container
               AnimatedContainer(
@@ -869,35 +890,28 @@ class _ApplyFiltersState extends State<ApplyFilters> {
 
               // Resource Type Filter Components
               // Resource Type Text-Tappable
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        resourceTypeContainerToggle =
-                            !resourceTypeContainerToggle;
-                        resourceTypeContainerHeight =
-                            (resourceTypeContainerToggle == false) ? 70 : 70;
-                        resourceTypeContainerWidth =
-                            (resourceTypeContainerToggle == false)
-                                ? 90
-                                : MediaQuery.of(context).size.width * 0.9;
-                      });
-                    },
-                    child: Text(
-                      "Resource Type",
-                      style: CustomTextStyles.headingsTextStyle,
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.clear_all_rounded, color: Colors.white),
-                    tooltip: 'Clear Resource Type',
-                    onPressed: selectedResourceType.isNotEmpty
-                        ? resetResourceTypeChips
-                        : null, // Disable if nothing is selected
-                  ),
-                ],
+              _buildFilterHeader(
+                'Resource Type',
+                selectedResourceType.isNotEmpty,
+                resetResourceTypeChips,
+                () => _showSearchOverlay(
+                  context,
+                  'Resource Type',
+                  widget.resourceTypeChips,
+                  selectedResourceType,
+                  callbackResourceTypeUpdatedFilterChipList,
+                ),
+                () {
+                  setState(() {
+                    resourceTypeContainerToggle = !resourceTypeContainerToggle;
+                    resourceTypeContainerHeight = resourceTypeContainerToggle
+                        ? 250
+                        : 70; // Changed from 70 to 250
+                    resourceTypeContainerWidth = resourceTypeContainerToggle
+                        ? MediaQuery.of(context).size.width * 0.9
+                        : 90;
+                  });
+                },
               ),
               // Resource Type-Chips Animated Container
               AnimatedContainer(
@@ -905,6 +919,8 @@ class _ApplyFiltersState extends State<ApplyFilters> {
                 alignment: Alignment.topLeft,
                 curve: Curves.easeInOutBack,
                 padding: EdgeInsets.all(8),
+                margin: EdgeInsets.only(
+                    bottom: 20), // Added bottom margin for last item
                 decoration:
                     CustomBackgroundGradientStyles.filterChipsBackground,
                 height: resourceTypeContainerHeight,

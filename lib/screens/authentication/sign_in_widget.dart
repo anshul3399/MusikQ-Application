@@ -77,18 +77,49 @@ class _SignInWidgetState extends State<SignInWidget> {
                         icon: FaIcon(FontAwesomeIcons.google,
                             color: Color.fromARGB(255, 33, 33, 33)),
                         onPressed: () async {
-                          setState(() => loading = true);
-                          final provider = Provider.of<GoogleSignInProvider>(
-                              context,
-                              listen: false);
-                          var loginResult =
-                              await provider.googleLogin(context: context);
-                          debugPrint(">> LoginResult variable = $loginResult");
-                          setState(() => loading = false);
-                          // if (loginResult == null) {
-                          // setState(() => loading = false);
-                          // }
-                          // setState(() => loading = false);
+                          try {
+                            setState(() => loading = true);
+
+                            debugPrint("Starting Google Sign-in process");
+                            final provider = Provider.of<GoogleSignInProvider>(
+                                context,
+                                listen: false);
+
+                            final loginResult =
+                                await provider.googleLogin(context: context);
+
+                            if (loginResult == null) {
+                              debugPrint("Sign-in was cancelled or failed");
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Sign in cancelled'),
+                                    duration: Duration(seconds: 2),
+                                  ),
+                                );
+                              }
+                              return;
+                            }
+
+                            debugPrint(
+                                "Successfully signed in with Google: ${loginResult.uid}");
+                            // Let the AuthenticationWrapper handle the navigation
+                          } catch (e) {
+                            debugPrint("Error during sign in: $e");
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content:
+                                      Text('Sign in failed: ${e.toString()}'),
+                                  duration: const Duration(seconds: 3),
+                                ),
+                              );
+                            }
+                          } finally {
+                            if (mounted) {
+                              setState(() => loading = false);
+                            }
+                          }
                         },
                         label: Text(
                           "Sign In with Google",
