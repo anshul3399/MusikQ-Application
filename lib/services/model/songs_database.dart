@@ -76,6 +76,18 @@ CREATE TABLE $tableSongs(
     return song.copy(songID: id.toString());
   }
 
+  /// Inserts many songs in a single transaction for better performance.
+  Future<void> createMany(List<SongData> songs) async {
+    final db = await instance.database;
+    await db.transaction((txn) async {
+      final batch = txn.batch();
+      for (final song in songs) {
+        batch.insert(tableSongs, song.toJson());
+      }
+      await batch.commit(noResult: true);
+    });
+  }
+
   Future<SongData> readNode(String id) async {
     final db = await instance.database;
 

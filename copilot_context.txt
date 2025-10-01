@@ -1,0 +1,71 @@
+Im builidng a flutter app, the app facilitetes in filtering the songs based on various labels and filter criterion
+
+The data is being fetched from google sheets API and is being locally loaded into a sqlite db, and on that data filtering is applied.
+
+The current progress of the app is as follows - 
+* I have 2 bottom navigation sections "BottomNavigationBarItem" ('Song List' and 'Filter')
+ i. in 'Song List' section all the songs present in the local DB (fetched from GoogleSheets) is populated and a search bar is provided at top to search through song titles
+ ii. in 'Filter' section i have verious sub section in which filter criterion are displayed to the user like ('Primary Search Label','Secondary Search Label','Likebility Index','Year','Singers','Music Director','Lyricist','Artist','Resource Type')
+ the user can select the items/chips in each subsection to provide the query parameters that will frame the search query
+ 
+* Also i have implemented user IAM and login using Google Firebase and user details are being stored there
+
+* In the home screen if the user clicks on the app icon available at top left section a PIN screen is populated  (pincode_view.dart)
+the user is expected to give the pin here if it matches with a user defined field in firebase - user is allowed to fetch data from Google Sheets
+
+
+in Firebase i have 2 Collections ('applicationConfiguration' and 'userData')
+in 'applicationConfiguration' i have a document 'AppData' this document holds the config data about the app with fields as -
+ i. 'accessPin' - string (a PIN that the user is expected to enter in 'pincode_view.dart' that will enable user to access the screen from where they can download the DB from GoogleSheets into localDB),
+ ii. 'appAccessKey' - string (a value that should match with the field 'appAccessKey' in 'userData' for a user to be able to use the app)
+ iii. 'deleteDB' - boolean (a flag that when set to true will remotely delete the localDB as downloaded on users Devices)
+ 
+in 'userData' collection we have documents being created with the userID (random key as provided by google) and each collection has followin fields - 
+i. 'appAccessKey' - string (should match with 'appAccessKey' should match with the field 'appAccessKey' in 'applicationConfiguration' for a user to be able to use the app)
+ii. 'email' - string (email of the user)
+iii. 'remotelyDeleteDB' - boolean (a flag when set to true will delete the local DB data for this specific user)
+iv. 'userPriviledgeLevel' - int (defines user priviledge level)
+
+
+
+
+
+the directory structre is as below (i have provided a hint towards the each file usage for your inference)
+📦lib
+ ┣ 📂screens
+ ┃ ┣ 📂authentication
+ ┃ ┃ ┣ 📜authentication_wrapper.dart (This is the wrapper widget, which continiously listens to a stream to check if user is signed in or not and based on that loads the particular widget if signed in then - HomePage() otherwise - SignUpPage())
+ ┃ ┃ ┗ 📜sign_in_widget.dart (Signin screen wideget)
+ ┃ ┗ 📂primaryScreens
+ ┃ ┃ ┣ 📜apply_filters.dart (this file have widgets that build the scructure of the filtering criterion chips, and also the fucntions to clear them - the data that user selectes here will ultimately form the search query)
+ ┃ ┃ ┣ 📜app_access_key_error_widget.dart (I have provided a app_access_key field in the firebase document, if the current user logged in doesn't have the same app access key, this widget will be populated)
+ ┃ ┃ ┣ 📜compute_filter_attributes.dart (gets the data that has to be populated as chips - chipList)
+ ┃ ┃ ┣ 📜empty_database_error_widget.dart (if the local db is empty, this widget is populated)
+ ┃ ┃ ┣ 📜fetchsongs_listview.dart (populates all songs queried from the local db in the 'Songs List' navbar section)
+ ┃ ┃ ┣ 📜filtered_result_list.dart (Result page of query. The entities matching with applied filters are shown in this view)
+ ┃ ┃ ┣ 📜home.dart (a wrapper widget to hold "BottomNavigationBarItem" ('Song List' and 'Filter'))
+ ┃ ┃ ┣ 📜operations_and_configurations_view.dart (this is the screen view where after PIN authentication user is directed and from here on press of button user can download the DB and it will be loaded into the sqlite local db, also other operations are mentioned here)
+ ┃ ┃ ┣ 📜pincode_view.dart (the screen that has the UI where the user will enter the PIN and on successful authentication it will be redirected to 'OperationsAndConfigurationsView')
+ ┃ ┃ ┗ 📜song_listview.dart (have the seach widget and the UI description about how the listview will be populated)
+ ┣ 📂services
+ ┃ ┣ 📂AppConfigsDatabase
+ ┃ ┃ ┗ 📜firestore_app_configs_database.dart (Application config data initiated here - FirebaseFirestore)
+ ┃ ┣ 📂authentication
+ ┃ ┃ ┗ 📜auth.dart (google signIn page)
+ ┃ ┣ 📂model
+ ┃ ┃ ┣ 📜app_configuration.dart (model for application configuration) 
+ ┃ ┃ ┣ 📜app_user.dart (model for application user data)
+ ┃ ┃ ┣ 📜filter_chips.dart (FilterChipData parameters defined here)
+ ┃ ┃ ┣ 📜songs_database.dart (db initialisation, creation, deletion, read and query framing logic implemented here)
+ ┃ ┃ ┗ 📜song_record.dart (SongsDBFields - db fields defined here)
+ ┃ ┣ 📂providers
+ ┃ ┃ ┗ 📜app_bg_gradient_provider.dart (on app load a random value is selected and based on that the app background color theme is being loaded)
+ ┃ ┣ 📂queryProcessing_LocalDB
+ ┃ ┃ ┗ 📜query_processing.dart (utility functions that are used to frame search query is implemented here)
+ ┃ ┗ 📂sheets api
+ ┃ ┃ ┗ 📜sheets_api.dart (sheet initialisation and other private details are being mentioned here)
+ ┣ 📂shared
+ ┃ ┣ 📜loading_widget.dart (constans - the loading widget UI)
+ ┃ ┣ 📜searchBox_widget.dart (constans - the searchbox widget UI)
+ ┃ ┗ 📜theme_constants.dart (constans - CustomTextStyles, CustomBackgroundGradientStyles)
+ ┗ 📜main.dart

@@ -227,19 +227,59 @@ class _OperationsAndConfigurationsViewState
                                 _fetchBtnText = "Fetching & Adding..";
                               });
 
+                              // Delete existing local DB before adding new entries
                               await SongsDatabase.instance
                                   .deleteSongsDB("songs.db");
-                              List<SongData>? songsDB =
-                                  await SheetsApi.getAllRows();
 
-                              for (int i = 0; i < songsDB!.length; i++) {
-                                await SongsDatabase.instance.create(songsDB[i]);
+                              // Attempt to fetch rows from Sheets API with retries on transient errors.
+                              List<SongData>? songsDB =
+                                  await SheetsApi.getAllRowsWithRetries(
+                                      maxAttempts: 5);
+
+                              // Handle null or empty response gracefully
+                              if (songsDB == null || songsDB.isEmpty) {
+                                if (mounted) {
+                                  setState(() {
+                                    _fetchAndAddPressed = false;
+                                    _fetchBtnText =
+                                        "Fetch Data from Online & Add into local DB";
+                                  });
+
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Failed to fetch data from online source or no data available.',
+                                        style: GoogleFonts.jost(),
+                                      ),
+                                      backgroundColor: Colors.redAccent,
+                                    ),
+                                  );
+                                }
+
+                                return;
+                              }
+
+                              // Insert fetched songs into local DB in batches
+                              const int batchSize = 100;
+                              for (int start = 0;
+                                  start < songsDB.length;
+                                  start += batchSize) {
+                                final end = (start + batchSize < songsDB.length)
+                                    ? start + batchSize
+                                    : songsDB.length;
+                                final batch = songsDB.sublist(start, end);
+                                await SongsDatabase.instance.createMany(batch);
+
                                 if (mounted) {
                                   setState(() {
                                     _fetchBtnText =
-                                        "${songsDB[i].songID}\tFetching & Adding..";
+                                        "Added ${start + batch.length} of ${songsDB.length} records...";
                                   });
                                 }
+
+                                // Small delay between batches to reduce burst traffic
+                                await Future.delayed(
+                                    const Duration(milliseconds: 300));
                               }
 
                               if (mounted) {
@@ -274,6 +314,32 @@ class _OperationsAndConfigurationsViewState
                             },
                             text: "View Local Database",
                             icon: Icons.storage_rounded,
+                          ),
+                          buildActionButton(
+                            onPressed: () async {
+                              final all =
+                                  await SongsDatabase.instance.readAllSongs();
+                              final count = all.length;
+                              showDialog(
+                                context: context,
+                                builder: (_) => AlertDialog(
+                                  title: Text('Local DB Records',
+                                      style: GoogleFonts.jost()),
+                                  content: Text('Total records: $count',
+                                      style: GoogleFonts.jost()),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(),
+                                      child: Text('Close',
+                                          style: GoogleFonts.jost()),
+                                    )
+                                  ],
+                                ),
+                              );
+                            },
+                            text: 'Show Local DB Count',
+                            icon: Icons.format_list_numbered_rounded,
                           ),
                           buildActionButton(
                             onPressed: () async {
